@@ -1,0 +1,66 @@
+{% extends "layout.html" %} {% block content %}
+<div class="row">
+
+    <div class="panel panel-default">
+        <div class="panel-heading row">
+
+            <div class="col-md-4 col-sm-4 col-xs-4 text-left">
+                <h5 class='text-muted post-author'>{{post.author}}</h5>
+            </div>
+
+            <div class="col-md-4 col-sm-4 col-xs-4 text-center">
+                <h2 class="post-subject">{{post.subject}}</h2>
+            </div>
+
+            <div class="col-md-4 col-sm-4 col-xs-4 text-right">
+                <h6>{{post.created.strftime('%Y-%m-%d | %H:%m')}}
+                  {% if post.author == user.name %}
+                  <a href="/blog/{{post.key().id()}}/edit">Edit</a>
+                  <a href="/blog/{{post.key().id()}}/delete">Delete</a>
+                  {% endif %}
+                </h6>
+            </div>
+        </div>
+        <div class="panel-body">
+            {{post.content}}
+        </div>
+
+    </div>
+    {% for c in post.listComments() %}
+    <div class="panel panel-default">
+        <div class="panel-heading row">
+
+            <div class="col-md-6 col-sm-6 col-xs-6 text-left">
+                <h5 class='text-muted post-author'>{{ c[1].author }}</h5>
+            </div>
+
+            <div class="col-md-6 col-sm-6 col-xs-6 text-right">
+                <h5>{{ c[1].created }}
+                  {% if c[1].author == user.name %}
+                  <a href="/blog/{{post.key().id()}}/editcomment/{{c[0]}}">Edit</a>
+                  <a href="/blog/{{post.key().id()}}/deletecomment/{{c[0]}}">Delete</a>
+                  {% endif %}
+                </h5>
+            </div>
+        </div>
+        <div class="panel-body">
+            {{ c[1].content }}
+        </div>
+
+    </div>
+    {% endfor %} {% if user.name != 'anon' %}
+    <form class="comment" action="/blog/{{post.key().id()}}/addcomment" method="post">
+        <div class="form-group">
+            <label class="" for="commentContent">Comment</label>
+            <textarea class="form-control" name="commentContent" id="commentContent" rows="8" cols="80" placeholder="Enter content here">{{commentContent | default('')}}</textarea>
+        </div>
+
+        <div class="error">
+            {{error}}
+        </div>
+        <input type="submit" name="" value="Submit">
+    </form>
+    {% endif %}
+</div>
+
+{% endblock content %}

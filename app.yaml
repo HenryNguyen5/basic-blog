@@ -3,9 +3,17 @@ api_version: 1
 threadsafe: true
 
 handlers:
+- url: /images
+  static_dir: images
+- url: /js
+  static_dir: js
+- url: /css
+  static_dir: css
 - url: /.*
   script: basic-blog.app
 
 libraries:
+  - name: webapp2
+    version: latest
   - name: jinja2
     version: latest

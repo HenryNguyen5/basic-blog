@@ -1,0 +1,17 @@
+{% extends "layout.html" %} {% block content %}
+
+<h1>Edit Comment</h1>
+
+<form class="editcomment" action="/blog/{{pID}}/editcomment/{{cID}}" method="post">
+    <div class="form-group">
+        <label for="content">Comment</label>
+        <textarea class="form-control" name="content" id="content" rows="8" cols="80" placeholder="Enter content here">{{content}}</textarea>
+    </div>
+
+    <div class="error">
+        {{error}}
+    </div>
+    <input type="submit" name="" value="Submit">
+</form>
+
+{% endblock content %}

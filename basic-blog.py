@@ -5,6 +5,7 @@ import re
 # minimal web frameworks
 import webapp2
 import jinja2
+import json
 
 # hashing libs for cookies && passowrds
 import hmac
@@ -14,10 +15,17 @@ from string import letters
 
 # google datastore
 from google.appengine.ext import db
+from datetime import datetime
 
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(
     loader=jinja2.FileSystemLoader(template_dir), autoescape=True)
+
+
+def getCurTime():
+    fmttedTime = '{t.year}/{t.month}/{t.day} | {t.hour}:{t.minute:02}'.format(
+        t=datetime.now())
+    return fmttedTime
 
 
 class Valid():
@@ -27,19 +35,36 @@ class Valid():
 
     @classmethod
     def username(cls, username):
-        return USER_RE.match(username)
+        # check if username exists
+        if User.getByName(username):
+            return False
+        return cls.USER_RE.match(username)
 
     @classmethod
     def password(cls, password):
-        return PASS_RE.match(password)
+        return cls.PASS_RE.match(password)
 
     @classmethod
     def email(cls, email):
-        return (EMAIL_RE.match(email) or email == '')
+        return (cls.EMAIL_RE.match(email) or email == '')
 
     @classmethod
     def verifyCmp(cls, password, verify):
         return password == verify
+
+    @classmethod
+    def register(cls, regDict):
+        errDict = {}
+        if not cls.username(regDict["username"]):
+            errDict["errUsername"] = "Not a valid username"
+        if not cls.password(regDict["password"]):
+            errDict["errPassword"] = "Not a valid password"
+        if not cls.verifyCmp(regDict["password"], regDict["verify"]):
+            errDict["errVerify"] = "Your passwords do not match"
+        if not cls.email(regDict["email"]):
+            errDict["errEmail"] = "Not a valid email"
+
+        return errDict
 
 
 class Hash():
@@ -57,6 +82,7 @@ class Hash():
 
     @classmethod
     def cookie(cls, val):
+        val = str(val)
         h = cls.__gen(hmac.new, cls.cookieSecret, val)
         return '{value}|{hash}'.format(value=val, hash=h)
 
@@ -65,15 +91,6 @@ class Hash():
         if not salt:
             salt = cls.__genSalt()
 
-        print ""
-        print ""
-        print ""
-        print "PWD:" + pwd
-        print "SALT:" + salt
-        print username
-        print ""
-        print ""
-        print ""
         h = cls.__gen(hashlib.sha256, username + pwd + salt)
         return '{value}|{salt}'.format(value=h, salt=salt)
 
@@ -102,6 +119,10 @@ class Cookie():
         # validate cookie
         if(Hash.cookie(plainVal) == c):
             return plainVal
+
+        # invalid cookies get cleared
+        else:
+            Cookie.clear(caller, name)
 
     @classmethod
     def set(cls, caller, name, val, path='/'):
@@ -142,26 +163,136 @@ class Cookie():
 
 
 class Post(db.Model):
+    author = db.StringProperty(required=True)
     subject = db.StringProperty(required=True)
     content = db.TextProperty(required=True)
     created = db.DateTimeProperty(auto_now_add=True)
     lastModified = db.DateTimeProperty(auto_now=True)
     # array of names that liked this post
-    likes = db.TextProperty()
+    likes = db.ListProperty(item_type=str, default=[])
     # will be array of Posts
-    #comments = db.TextProperty()
+    comments = db.TextProperty(default='{}')
+
+    @classmethod
+    def new(cls, author, subject, content):
+        p = Post(author=author, subject=subject, content=content)
+        p.put()
+        return p
+
+    @classmethod
+    def getByName(cls, name):
+
+        # get the user object
+        queryString = "WHERE subject = '{name}'".format(name=name)
+
+        # get first entry
+        return cls.gql(queryString).get()
+
+    @classmethod
+    def getById(cls, postID):
+        return cls.get_by_id(int(postID))
+
+    @classmethod
+    def getRecent(cls, amtToReturn=10):
+        queryString = "ORDER BY created DESC LIMIT {limit}".format(
+            limit=amtToReturn)
+        return cls.gql(queryString)
+
+    @classmethod
+    def getComment(cls, postID, commentID):
+        p = cls.getById(postID)
+        loadedComments = json.loads(p.comments)
+        return loadedComments[commentID]
+
+    def like(self, currUsr):
+        likeVal = len(self.likes)
+        # make sure they havent liked already && isnt author
+        if(currUsr.name not in self.likes) and (currUsr.name != self.author):
+            self.likes.append(currUsr.name)
+            likeVal += 1
+
+        # if they alraedy liked and arent author, unlike
+        elif (currUsr.name in self.likes) and (currUsr.name != self.author):
+            self.likes.remove(currUsr.name)
+            likeVal -= 1
+
+        self.put()
+        return likeVal
+
+    def edit(self, subject, content):
+        if not subject and not content:
+            return False
+        self.subject = subject
+        self.content = content
+        self.put()
+        return True
+
+    def addComment(self, currUsr, comment):
+        loadedComments = json.loads(self.comments)
+        numOfComments = str(len(loadedComments) + 1)
+        loadedComments[numOfComments] = {
+            'author': currUsr.name,
+            'content': comment,
+            'created': getCurTime(),
+            'edited': getCurTime()
+        }
+        self.comments = json.dumps(loadedComments)
+        self.put()
+
+    def editComment(self, currUsr, comment, commentID):
+        # get dict of comments for this post
+        loadedComments = json.loads(self.comments)
+
+        c = loadedComments.get(commentID)
+        if not c or not comment:
+            return False
+
+        # validate its the right user
+        if c["author"] != currUsr.name:
+            return False
+        else:
+            c["content"] = comment
+            c["edited"] = getCurTime()
+            # set to json string and store
+            self.comments = json.dumps(loadedComments)
+            self.put()
+            return True
+
+    def deleteComment(self, currUsr, commentID):
+        # get dict of comments for this post
+        loadedComments = json.loads(self.comments)
+
+        # validate user
+        c = loadedComments.get(commentID)
+        if not c:
+            return False
+
+        # validate its the right user
+        if c["author"] != currUsr.name:
+            return False
+        else:
+            del loadedComments[commentID]
+            self.comments = json.dumps(loadedComments)
+            self.put()
+            return True
+
+    def listComments(self):
+
+        loadedComments = json.loads(self.comments)
+        l = loadedComments.items()
+        l.sort(key=lambda val: int(val[0]))
+        return l
 
 
 class User(db.Model):
 
-    # array of post ID's
-    associatedPosts = db.TextProperty()
     name = db.StringProperty(required=True)
     password = db.StringProperty(required=True)
     email = db.StringProperty()
+    lastLoginTime = db.StringProperty(required=True, default=getCurTime())
 
     @classmethod
-    def login(cls, name, password):
+    def Login(cls, name, password):
         curUsr = cls.getByName(name)
         # check if username exists
         if not curUsr:
@@ -171,10 +302,23 @@ class User(db.Model):
         hashPw = hashedPwArr[0]
         salt = hashedPwArr[1]
         inputtedPass = Hash.password(name, password, salt).split('|')[0]
-        print hashPw
-        print inputtedPass
         # check if hashedPw matches with users inputted pw
-        return hashPw == inputtedPass
+        if hashPw == inputtedPass:
+            return curUsr
+        else:
+            return False
+
+    @classmethod
+    def Logout(cls, uid):
+        if not uid:
+            return
+        curUsr = cls.getById(uid)
+        if not curUsr:
+            return
+        # set last login time before logging out
+        curUsr.lastLoginTime = getCurTime()
+        curUsr.put()
+        return
 
     @classmethod
     def getByName(cls, name):
@@ -183,69 +327,321 @@ class User(db.Model):
         queryString = "WHERE name = '{name}'".format(name=name)
 
         # get first entry
-        return User.gql(queryString).get()
+        return cls.gql(queryString).get()
 
     @classmethod
     def getById(cls, uid):
-        return cls.get_by_id(int(uid)).get()
+        if not uid.isdigit():
+            return
+        return cls.get_by_id(int(uid))
 
     @classmethod
     def register(cls, name, password, email=''):
-        # check if name exists
-        if cls.getByName(name):
-            return None
         password = Hash.password(name, password)
-        user = User(name=name, password=password, email=email, username=name)
+        user = User(name=name, password=password,
+                    email=email, username=name)
         user.put()
         return user
 
 
 class Signup(Handler):
 
-    def get(self):
-        return
-
-
-class front(Handler):
+    def renderSignup(self, username='', email='', **kwargs):
+        curUsr = {'name': 'anon', 'lastLoginTime': 'Now'}
+        return self.render('signup.html', username=username, email=email, user=curUsr, **kwargs)
 
     def get(self):
-        #curUser = User.register("test", "bueno")
-        # print curUser.name
-        # print curUser.password
-        print "testing user"
-        curUser = User.getByName('test')
+        return self.renderSignup()
 
-        print curUser.key().id()
-        nxtUsr = User.get_by_id(curUser.key().id())
-        print nxtUsr.password
-        print User.login('tet', 'bueno')
-        usrCookie = Cookie.get(self, 'currUsr')
-        print usrCookie
-        Cookie.set(self, 'currUsr', curUser.name)
-        usrCookie = Cookie.get(self, 'currUsr')
-        print usrCookie
-        #Cookie.clear(self, 'currUsr')
-        print "after clear"
-        usrCookie = Cookie.get(self, 'currUsr')
-        print usrCookie
-        return
+    def post(self):
+        regDict = {}
+        errDict = {}
+        regDict["username"] = self.request.get('username')
+        regDict["password"] = self.request.get('password')
+        regDict["verify"] = self.request.get('verify')
+        regDict["email"] = self.request.get('email')
+        errDict = Valid.register(regDict)
+        if errDict:
+            return self.renderSignup(regDict["username"], regDict["email"], **errDict)
+        registeredUsr = User.register(regDict["username"], regDict[
+            "password"], regDict["email"])
+
+        # set cookie to current userID
+        Cookie.set(self, 'uid', registeredUsr.key().id())
+
+        # redirect to front page after
+        return self.redirect('/')
+
+
+
+class Front(Handler):
+
+    def get(self):
+        c = Cookie.get(self, 'uid')
+        curUsr = {'name': 'anon', 'lastLoginTime': 'Now'}
+        if c:
+            curUsr = User.getById(c)
+
+        recentPosts = Post.getRecent()
+        self.render('main.html', blogs=recentPosts, user=curUsr)
 
 
 class PermaPost(Handler):
 
-    def get(self):
-        return
+    def get(self, postID):
+        uid = Cookie.get(self, 'uid')
+
+        # get curr user
+        currUsr = User.getById(uid)
+        if not currUsr:
+            currUsr = {'name': 'anon', 'lastLoginTime': 'Now'}
+
+        p = Post.getById(postID)
+        if not p:
+            return self.redirect('/')
+
+        return self.render('post.html', post=p, user=currUsr)
 
 
 class Logout(Handler):
 
     def get(self):
-        return
+        uid = Cookie.get(self, 'uid')
+
+        User.Logout(uid)
+        Cookie.clear(self, 'uid')
+        return self.redirect('/')
+
+
+class Welcome(Handler):
+
+    def get(self):
+        c = Cookie.get(self, 'uid')
+        if not c:
+            return self.redirect('/signup')
+        curUsr = User.getById(c)
+        self.render('welcome.html', user=curUsr)
+
+
+class Login(Handler):
+
+    def renderLogin(self, username='', error=''):
+        curUsr = {'name': 'anon', 'lastLoginTime': 'Now'}
+        return self.render('login.html', username=username, error=error, user=curUsr)
+
+    def get(self):
+        return self.renderLogin()
+
+    def post(self):
+        username = self.request.get('username')
+        password = self.request.get('password')
+        curUsr = User.Login(username, password)
+
+        if not curUsr:
+            err = "Invalid username/password"
+            return self.renderLogin(username, error=err)
+
+        # set cookie to current userID
+        Cookie.set(self, 'uid', curUsr.key().id())
+
+        # redirect to front page after
+        return self.redirect('/')
+
+
+
+class GenericPost(Handler):
+
+    def getPostAndUsr(self, postID, sameUsrAsPost=True):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            return
+        # get curr user
+        currUsr = User.getById(uid)
+
+        # check if currUsr is blog post author
+        p = Post.getById(postID)
+        if (not currUsr.name == p.author) and (sameUsrAsPost):
+            return
+        return [p, currUsr]
+
+
+class NewPost(Handler):
+
+    def renderNewPost(self, subject="", content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}):
+        self.render("newpost.html", subject=subject,
+                    content=content, error=error, user=currUsr)
+
+    def get(self):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            return self.redirect('/login')
+        currUsr = User.getById(uid)
+        self.renderNewPost(currUsr=currUsr)
+
+    def post(self):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            self.redirect('/login')
+
+        # get curr user
+        currUsr = User.getById(uid)
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+
+        if subject and content:
+            p = Post.new(author=currUsr.name,
+                         subject=subject, content=content)
+            postID = p.key().id()
+            # store to db
+            currUsr.put()
+            # get rid of redirect msg
+            return self.redirect("/blog/" + str(postID))
+
+        else:
+            error = "We need both a subject and some content!"
+            self.renderNewPost(content=content,
+                               subject=subject, error=error, currUsr=currUsr)
+
+
+class EditPost(GenericPost):
+
+    def renderEditPost(self, subject="", content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}, pID=''):
+        self.render("editpost.html", subject=subject,
+                    content=content, error=error, user=currUsr, pID=pID)
+
+    def get(self, postID):
+        try:
+            p, currUsr = self.getPostAndUsr(postID)
+        except TypeError:
+            return self.redirect('/')
+        self.renderEditPost(subject=p.subject,
+                            content=p.content, pID=postID)
+
+    def post(self, postID):
+
+        try:
+            p, currUsr = self.getPostAndUsr(postID)
+        except TypeError:
+            return self.redirect('/')
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        if not p.edit(subject, content):
+            error = "We need both a subject and some content!"
+            return self.renderEditPost(content=content,
+                                       subject=subject, error=error, currUsr=currUsr, pID=postID)
+
+        return self.redirect("/blog/" + str(postID))
+
+
+class DeletePost(GenericPost):
+
+    def get(self, postID):
+        try:
+            p, currUsr = self.getPostAndUsr(postID)
+        except TypeError:
+            return self.redirect('/')
+        p.delete()
+        return self.redirect('/')
+
+
+class LikePost(GenericPost):
+
+    def get(self, postID):
+        try:
+            p, currUsr = self.getPostAndUsr(postID, sameUsrAsPost=False)
+        except TypeError:
+            return self.redirect('/')
+
+        resp = {"val": p.like(currUsr), "postID": postID}
+        self.response.write(json.dumps(resp))
+
+
+class AddComment(PermaPost):
+
+    def renderAddComment(self, content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}, p=''):
+        self.render("post.html",
+                    commentContent=content, error=error, user=currUsr, post=p)
+
+    def post(self, postID):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            return self.redirect('/login')
+
+        # get curr user
+        currUsr = User.getById(uid)
+        p = Post.getById(postID)
+        content = self.request.get('commentContent')
+
+        if content:
+            p.addComment(currUsr, content)
+
+            # get rid of redirect msg
+            return self.redirect("/blog/" + str(postID))
+
+        else:
+            error = "We need some content!"
+            self.renderAddComment(content=content,
+                                  error=error, currUsr=currUsr, p=p)
+
+
+class EditComment(Handler):
+
+    def renderEditComment(self, content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}, pID='', cID=''):
+        self.render("editcomment.html",
+                    content=content, error=error, user=currUsr, pID=pID, cID=cID)
+
+    def get(self, postID, commentID):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            return self.redirect('/login')
+        currUsr = User.getById(uid)
+        c = Post.getComment(postID, commentID)
+
+        self.renderEditComment(content=c['content'], currUsr=currUsr, pID=postID, cID=commentID)
+
+    def post(self, postID, commentID):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            return self.redirect('/login')
+
+        currUsr = User.getById(uid)
+        p = Post.getById(postID)
+        content = self.request.get('content')
+
+        if not p.editComment(currUsr, content, commentID):
+            error = "We need some content!"
+            return self.renderEditComment(content=content, currUsr=currUsr, pID=postID, cID=commentID, error=error)
+
+        return self.redirect("/blog/" + str(postID))
+
+
+class DeleteComment(Handler):
+
+    def get(self, postID, commentID):
+        uid = Cookie.get(self, 'uid')
+        if not uid:
+            return self.redirect('/login')
+
+        currUsr = User.getById(uid)
+        p = Post.getById(postID)
+
+        p.deleteComment(currUsr, commentID)
+
+        return self.redirect("/blog/" + str(postID))
 
 
 app = webapp2.WSGIApplication([
     ('/signup', Signup),
-    ('/', front),
+    ('/', Front),
     ('/blog/(\d+)', PermaPost),
+    ('/blog/(\d+)/edit', EditPost),
+    ('/blog/(\d+)/delete', DeletePost),
+    ('/blog/(\d+)/like', LikePost),
+    ('/blog/(\d+)/addcomment', AddComment),
+    ('/blog/(\d+)/editcomment/(\d+)', EditComment),
+    ('/blog/(\d+)/deletecomment/(\d+)', DeleteComment),
+    ('/login', Login),
+    ('/welcome', Welcome),
     ('/logout', Logout),
+    ('/newpost', NewPost)
 ], debug=True)

@@ -1,23 +1,62 @@
-<!DOCTYPE html>
-<html>
+{% extends "layout.html" %} {% block scripts%} {{ super() }}
+<script type="text/javascript" src="/js/frontpg.js">
+</script>
+{% endblock scripts%} {% block content %} {% for post in blogs %}
+<div class="row">
 
-    <head>
-        <meta charset="utf-8">
-        <title>Blog</title>
-    </head>
 
-    <body>
-        {% for blog in blogs %}
-        <div class="blog">
-            <div class="blog-subject">
-                {{blog.subject}}
+    <div class="panel panel-default">
+
+        <div class="panel-heading row ">
+            <a href="/blog/{{post.key().id()}}">
+                <div class="col-md-4 col-sm-4 col-xs-4 text-left">
+                    <h5 class='text-muted post-author'>{{post.author}}</h5>
+                </div>
+
+                <div class="col-md-4 col-sm-4 col-xs-4 text-center">
+                    <h2 class="post-subject">
+                        {{post.subject}}
+                    </h2>
+                </div>
+            </a>
+            <div class="col-md-4 col-sm-4 col-xs-4 text-right">
+                <h5>
+                  {{post.created.strftime('%Y-%m-%d | %H:%m')}}
+                    {% if post.author == user.name %}
+                    <a href="/blog/{{post.key().id()}}/edit">Edit</a>
+                    <a href="/blog/{{post.key().id()}}/delete">Delete</a>
+                    {% endif %}
+                </h5>
             </div>
-            <hr>
-            <div class="blog-content">
-                {{blog.content}}
+
+        </div>
+        <div class="panel-body">
+            {{post.content}}
+        </div>
+        <div class="panel-footer row">
+            <div class="col-md-6 col-sm-6 col-xs-6 text-left">
+                <h5 class='like' id="{{post.key().id()}}">Likes {% if post.likes %}
+                  {{ post.likes | length() }}
+                  {% else %} 0
+                  {% endif %}
+                </h5>
+            </div>
+
+            <div class="col-md-6 col-sm-6 col-xs-6 text-right">
+                <a href="/blog/{{post.key().id()}}/addcomment">
+                    <h6 class="comment">
+                      Comments {% if post.comments %}
+                        {{ post.listComments() | length() }}
+                        {% else %} 0
+                        {% endif %}
+
+                  </h6>
+                </a>
+
             </div>
         </div>
-        {% endfor %}
-    </body>
+    </div>
 
-</html>
+</div>
+
+{% endfor %} {% endblock content %} %}

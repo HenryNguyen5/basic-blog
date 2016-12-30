@@ -1,0 +1,19 @@
+.panel-heading.row, .panel-footer.row {
+  margin: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+.post-subject, .like, .comment {
+  margin: 0
+}
+.post-author{
+  margin: 10px
+}
+.panel-default a:link, .panel-default a:hover, .panel-default a:visited, .panel-default a:active {
+       color: #000;
+       text-decoration: none;
+}
+
+.like {
+  cursor: pointer;
+}

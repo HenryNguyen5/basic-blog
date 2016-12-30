@@ -1,0 +1,78 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	0	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+os	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import os$/;"	namespace	line:2
+re	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import re$/;"	namespace	line:3
+webapp2	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import webapp2$/;"	namespace	line:6
+jinja2	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import jinja2$/;"	namespace	line:7
+hmac	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import hmac$/;"	namespace	line:10
+hashlib	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import hashlib$/;"	namespace	line:11
+random	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^import random$/;"	namespace	line:12
+letters	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^from string import letters$/;"	namespace	line:13
+db	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^from google.appengine.ext import db$/;"	namespace	line:16
+template_dir	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^template_dir = os.path.join(os.path.dirname(__file__), 'templates')$/;"	variable	line:18
+jinja_env	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^jinja_env = jinja2.Environment($/;"	variable	line:19
+loader	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    loader=jinja2.FileSystemLoader(template_dir), autoescape=True)$/;"	variable	line:20
+Valid	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Valid():$/;"	class	line:23
+USER_RE	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")$/;"	variable	line:24	class:Valid
+PASS_RE	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    PASS_RE = re.compile(r"^.{3,20}$")$/;"	variable	line:25	class:Valid
+EMAIL_RE	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    EMAIL_RE = re.compile(r"^[\\S]+@[\\S]+.[\\S]+$")$/;"	variable	line:26	class:Valid
+username	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def username(cls, username):$/;"	member	line:29	class:Valid
+password	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def password(cls, password):$/;"	member	line:36	class:Valid
+email	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def email(cls, email):$/;"	member	line:40	class:Valid
+verifyCmp	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def verifyCmp(cls, password, verify):$/;"	member	line:44	class:Valid
+register	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def register(cls, regDict):$/;"	member	line:48	class:Valid
+Hash	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Hash():$/;"	class	line:62
+cookieSecret	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    cookieSecret = "FsdKJSD843(*#$jk2n)!weeh3"$/;"	variable	line:63	class:Hash
+__gen	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def __gen(self, algo, *algoParams):$/;"	member	line:66	class:Hash	file:
+__genSalt	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def __genSalt(self, length=5):$/;"	member	line:72	class:Hash	file:
+cookie	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def cookie(cls, val):$/;"	member	line:76	class:Hash
+password	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def password(cls, username, pwd, salt=''):$/;"	member	line:81	class:Hash
+Handler	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Handler(webapp2.RequestHandler):$/;"	class	line:89
+write	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def write(self, *a, **kw):$/;"	member	line:91	class:Handler
+render_str	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def render_str(self, template, **params):$/;"	member	line:94	class:Handler
+render	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def render(self, template, **kw):$/;"	member	line:98	class:Handler
+Cookie	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Cookie():$/;"	class	line:102
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(cls, caller, name, defaultVal=''):$/;"	member	line:105	class:Cookie
+set	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def set(cls, caller, name, val, path='\/'):$/;"	member	line:115	class:Cookie
+clear	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def clear(cls, caller, name, path='\/'):$/;"	member	line:127	class:Cookie
+Post	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Post(db.Model):$/;"	class	line:152
+subject	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    subject = db.StringProperty(required=True)$/;"	variable	line:153	class:Post
+content	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    content = db.TextProperty(required=True)$/;"	variable	line:154	class:Post
+created	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    created = db.DateTimeProperty(auto_now_add=True)$/;"	variable	line:155	class:Post
+lastModified	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    lastModified = db.DateTimeProperty(auto_now=True)$/;"	variable	line:156	class:Post
+likes	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    likes = db.TextProperty()$/;"	variable	line:158	class:Post
+new	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def new(cls, subject, content):$/;"	member	line:163	class:Post
+getByName	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def getByName(cls, name):$/;"	member	line:169	class:Post
+getById	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def getById(cls, uid):$/;"	member	line:178	class:Post
+User	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class User(db.Model):$/;"	class	line:182
+associatedPosts	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    associatedPosts = db.TextProperty()$/;"	variable	line:185	class:User
+name	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    name = db.StringProperty(required=True)$/;"	variable	line:186	class:User
+password	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    password = db.StringProperty(required=True)$/;"	variable	line:187	class:User
+email	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    email = db.StringProperty()$/;"	variable	line:188	class:User
+validLogin	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def validLogin(cls, name, password):$/;"	member	line:191	class:User
+getByName	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def getByName(cls, name):$/;"	member	line:206	class:User
+getById	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def getById(cls, uid):$/;"	member	line:215	class:User
+register	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def register(cls, name, password, email=''):$/;"	member	line:219	class:User
+Signup	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Signup(Handler):$/;"	class	line:226
+renderSignup	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def renderSignup(username='', email='', **kwargs):$/;"	member	line:227	class:Signup
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(self):$/;"	member	line:230	class:Signup
+post	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def post(self):$/;"	member	line:233	class:Signup
+Front	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Front(Handler):$/;"	class	line:252
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(self):$/;"	member	line:254	class:Front
+PermaPost	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class PermaPost(Handler):$/;"	class	line:259
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(self):$/;"	member	line:261	class:PermaPost
+Logout	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Logout(Handler):$/;"	class	line:265
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(self):$/;"	member	line:267	class:Logout
+Signup	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class Signup(Handler):$/;"	class	line:271
+renderLogin	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def renderLogin(username='', error=''):$/;"	member	line:272	class:Signup
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(self):$/;"	member	line:275	class:Signup
+post	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def post(self):$/;"	member	line:278	class:Signup
+NewPost	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^class NewPost(Handler):$/;"	class	line:296
+renderNewPost	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def renderNewPost(self, subject="", content="", error=""):$/;"	member	line:298	class:NewPost
+get	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def get(self):$/;"	member	line:301	class:NewPost
+post	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^    def post(self):$/;"	member	line:309	class:NewPost
+app	C:\Users\Henry\OneDrive\myCode\basic-blog\basic-blog.py	/^app = webapp2.WSGIApplication([$/;"	variable	line:334

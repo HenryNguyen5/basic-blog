@@ -1,0 +1,26 @@
+{% extends "layout.html" %} {% block content %}
+<h1>Signup</h1>
+<form class="loginForm" action="/signup" method="post">
+    <div class="form-group">
+        <label for="Username">Username</label>
+        <input type="text" name="username" class="form-control" id="username" aria-describedby="username" placeholder="Enter username">
+        <div style="color: red">{{ errUsername }}</div>
+    </div>
+    <div class="form-group">
+        <label for="Password">Password</label>
+        <input type="password" name="password" class="form-control" id="password" aria-describedby="password" placeholder="Enter password">
+        <div style="color: red">{{ errPassword }}</div>
+    </div>
+    <div class="form-group">
+        <label for="Verify Password">Verify Password</label>
+        <input type="password" name="verify" class="form-control" id="verify" aria-describedby="Verify Password" placeholder="Verify Password">
+        <div style="color: red">{{ errVerify }}</div>
+    </div>
+    <div class="form-group">
+        <label for="Email">Email</label>
+        <input type="email" name="email" class="form-control" id="email" aria-describedby="Email" placeholder="Enter email (Optional)">
+        <div style="color: red">{{ errEmail }}</div>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
+{% endblock content %}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="utf-8">
+        <title> {% block title %} Henry's Blog {% endblock title %}</title>
+
+        <meta name="author" content="Henry Nguyen">
+        <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="description" content="Henry's Blog" /> {% block css %}
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/css/master.css"> {% endblock css %} {% block scripts %}
+        <script type="text/javascript" src="/js/jquery-3.1.1.min.js"></script>
+        <script type="text/javascript" src="/js/bootstrap.min.js"></script>
+        {% endblock scripts %}
+    </head>
+
+    <body>
+        <div class='container'>
+            <div class='row'>
+                <nav class="navbar navbar-default" role="navigation">
+                    <div class="container-fluid">
+                        <!-- Brand and toggle get grouped for better mobile display -->
+                        <div class="navbar-header">
+                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                                <span class="sr-only">Toggle navigation</span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                                <span class="icon-bar"></span>
+                            </button>
+                            <a class="navbar-brand" href="/">Welcome, {{ user.name }}</a>
+                        </div>
+
+                        <!-- Collect the nav links, forms, and other content for toggling -->
+                        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                            <!--
+                            <form class="navbar-form navbar-left" role="search">
+                                <div class="form-group">
+                                    <input type="text" class="form-control" placeholder="Search">
+                                </div>
+                                <button type="submit" class="btn btn-default">Go</button>
+                            </form>
+                          -->
+
+
+                            <ul class="nav navbar-nav">
+                                <li>
+                                    <a href="/newpost">Make Post</a>
+                                </li>
+                            </ul>
+                            <ul class="nav navbar-nav navbar-right">
+                                <li>
+                                    <a href="#">Last Login: {{ user.lastLoginTime }}</a>
+                                </li>
+                                {% if user.lastLoginTime != 'Now' %}
+                                <li>
+                                    <!--<a data-toggle="modal" data-target="#logout">Logout</a>-->
+                                    <a href="/logout"> Logout </a>
+                                </li>
+
+                                {% else %}
+                                <li>
+                                    <!--<a data-toggle="modal" data-target="#login">Login</a>-->
+                                    <a href="/login"> Login </a>
+                                </li>
+                                <li>
+                                    <!--<a data-toggle="modal" data-target="#signup">Register</a>-->
+                                    <a href="/signup"> Register </a>
+                                </li>
+
+                                {% endif %}
+                                </li>
+                            </ul>
+                        </div>
+                        <!-- /.navbar-collapse -->
+                    </div>
+                    <!-- /.container-fluid -->
+                </nav>
+            </div>
+            {% block content %} {% endblock content %} {% block modals %}
+            <!-- Modal for login -->
+            <div class="modal fade" id="login" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title text-center" id="myModalLabel">Login</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="loginForm" action="/login" method="post">
+                                <div class="form-group">
+                                    <label for="Username">Username</label>
+                                    <input type="text" class="form-control" id="username" aria-describedby="username" placeholder="Enter username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="Password">Password</label>
+                                    <input type="password" class="form-control" id="password" aria-describedby="password" placeholder="Enter password">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+
+            <!-- Modal for register-->
+            <div class="modal fade" id="signup" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h4 class="modal-title text-center" id="myModalLabel">Signup</h4>
+                        </div>
+                        <div class="modal-body">
+                            <form class="loginForm" action="/signup" method="post">
+                                <div class="form-group">
+                                    <label for="Username">Username</label>
+                                    <input type="text" class="form-control" id="username" aria-describedby="username" placeholder="Enter username">
+                                </div>
+                                <div class="form-group">
+                                    <label for="Password">Password</label>
+                                    <input type="password" class="form-control" id="password" aria-describedby="password" placeholder="Enter password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="Verify Password">Verify Password</label>
+                                    <input type="password" class="form-control" id="verify" aria-describedby="Verify Password" placeholder="Verify Password">
+                                </div>
+                                <div class="form-group">
+                                    <label for="Email">Email</label>
+                                    <input type="email" class="form-control" id="email" aria-describedby="Email" placeholder="Enter email (Optional)">
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endblock modals %}
+
+
+        </div>
+    </body>
+
+</html>
