@@ -1,1 +1,19 @@
-{% extends "newpost.html" %} {% block postName %}Edit Post{% endblock postName %} {% block postClass %}editpost{% endblock postClass %} {% block postAction %}blog/{{pID}}/edit{% endblock postAction %}
+{% extends "newpost.html" %}
+  {% block postName %}
+    Edit Post
+  {% endblock postName %}
+
+  {% block postClass %}
+    editpost
+  {% endblock postClass %}
+
+  {% block postAction %}blog/{{pID}}/edit
+  {% endblock postAction %}
+
+{% block button %}
+<hr>
+<form class="" action="/blog/{{pID}}" method="get">
+    <input type="submit" name="" value="Go back">
+</form>
+
+{% endblock button %}

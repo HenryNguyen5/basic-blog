@@ -95,19 +95,6 @@ class Hash():
         return '{value}|{salt}'.format(value=h, salt=salt)
 
 
-class Handler(webapp2.RequestHandler):
-
-    def write(self, *a, **kw):
-        self.response.out.write(*a, **kw)
-
-    def render_str(self, template, **params):
-        t = jinja_env.get_template(template)
-        return t.render(params)
-
-    def render(self, template, **kw):
-        self.write(self.render_str(template, **kw))
-
-
 class Cookie():
 
     @classmethod
@@ -139,27 +126,6 @@ class Cookie():
     @classmethod
     def clear(cls, caller, name, path='/'):
         cls.set(caller, name, '', path)
-
-# helper class for auto hashing passwords on input
-# class HashedPwProperty(db.TextProperty):
-#
-#    __username = ''
-#
-#    def __init__(self, username='', **kwargs):
-#        super(HashedPwProperty, self).__init__(**kwargs)
-#        self.__username = username
-#
-#    def hashPw(self, pw):
-#        if self.__username:
-#            return Hash.password(self.__username, pw)
-#        else:
-#            raise ValueError('username cannot be empty!')
-#
-#    def get_value_for_datastore(self, model_instance):
-#        result = super(HashedPwProperty, self).get_value_for_datastore(
-#            model_instance)
-#        result = self.hashPw(result)
-#        return db.Text(result)
 
 
 class Post(db.Model):
@@ -289,10 +255,11 @@ class User(db.Model):
     name = db.StringProperty(required=True)
     password = db.StringProperty(required=True)
     email = db.StringProperty()
-    lastLoginTime = db.StringProperty(required=True, default=getCurTime())
+    lastLoginTime = db.StringProperty(
+        required=True, default=getCurTime())
 
     @classmethod
-    def Login(cls, name, password):
+    def login(cls, name, password):
         curUsr = cls.getByName(name)
         # check if username exists
         if not curUsr:
@@ -301,7 +268,8 @@ class User(db.Model):
         hashedPwArr = curUsr.password.split('|')
         hashPw = hashedPwArr[0]
         salt = hashedPwArr[1]
-        inputtedPass = Hash.password(name, password, salt).split('|')[0]
+        inputtedPass = Hash.password(
+            name, password, salt).split('|')[0]
         # check if hashedPw matches with users inputted pw
         if hashPw == inputtedPass:
             return curUsr
@@ -309,7 +277,7 @@ class User(db.Model):
             return False
 
     @classmethod
-    def Logout(cls, uid):
+    def logout(cls, uid):
         if not uid:
             return
         curUsr = cls.getById(uid)
@@ -344,11 +312,28 @@ class User(db.Model):
         return user
 
 
+class Handler(webapp2.RequestHandler):
+
+    def write(self, *a, **kw):
+        self.response.out.write(*a, **kw)
+
+    def render_str(self, template, **params):
+        t = jinja_env.get_template(template)
+        return t.render(params)
+
+    def render(self, template, **kw):
+        self.write(self.render_str(template, **kw))
+
+
 class Signup(Handler):
 
     def renderSignup(self, username='', email='', **kwargs):
         curUsr = {'name': 'anon', 'lastLoginTime': 'Now'}
-        return self.render('signup.html', username=username, email=email, user=curUsr, **kwargs)
+        return self.render('signup.html',
+                           username=username,
+                           email=email,
+                           user=curUsr,
+                           **kwargs)
 
     def get(self):
         return self.renderSignup()
@@ -362,16 +347,18 @@ class Signup(Handler):
         regDict["email"] = self.request.get('email')
         errDict = Valid.register(regDict)
         if errDict:
-            return self.renderSignup(regDict["username"], regDict["email"], **errDict)
-        registeredUsr = User.register(regDict["username"], regDict[
-            "password"], regDict["email"])
+            return self.renderSignup(regDict["username"],
+                                     regDict["email"],
+                                     **errDict)
+        registeredUsr = User.register(regDict["username"],
+                                      regDict["password"],
+                                      regDict["email"])
 
         # set cookie to current userID
         Cookie.set(self, 'uid', registeredUsr.key().id())
 
         # redirect to front page after
         return self.redirect('/')
-
 
 
 class Front(Handler):
@@ -408,7 +395,7 @@ class Logout(Handler):
     def get(self):
         uid = Cookie.get(self, 'uid')
 
-        User.Logout(uid)
+        User.logout(uid)
         Cookie.clear(self, 'uid')
         return self.redirect('/')
 
@@ -427,7 +414,10 @@ class Login(Handler):
 
     def renderLogin(self, username='', error=''):
         curUsr = {'name': 'anon', 'lastLoginTime': 'Now'}
-        return self.render('login.html', username=username, error=error, user=curUsr)
+        return self.render('login.html',
+                           username=username,
+                           error=error,
+                           user=curUsr)
 
     def get(self):
         return self.renderLogin()
@@ -435,7 +425,7 @@ class Login(Handler):
     def post(self):
         username = self.request.get('username')
         password = self.request.get('password')
-        curUsr = User.Login(username, password)
+        curUsr = User.login(username, password)
 
         if not curUsr:
             err = "Invalid username/password"
@@ -446,7 +436,6 @@ class Login(Handler):
 
         # redirect to front page after
         return self.redirect('/')
-
 
 
 class GenericPost(Handler):
@@ -467,7 +456,12 @@ class GenericPost(Handler):
 
 class NewPost(Handler):
 
-    def renderNewPost(self, subject="", content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}):
+    def renderNewPost(self,
+                      subject="",
+                      content="",
+                      error="",
+                      currUsr={'name': 'anon', 'lastLoginTime': 'Now'}):
+
         self.render("newpost.html", subject=subject,
                     content=content, error=error, user=currUsr)
 
@@ -481,7 +475,7 @@ class NewPost(Handler):
     def post(self):
         uid = Cookie.get(self, 'uid')
         if not uid:
-            self.redirect('/login')
+            return self.redirect('/login')
 
         # get curr user
         currUsr = User.getById(uid)
@@ -505,7 +499,12 @@ class NewPost(Handler):
 
 class EditPost(GenericPost):
 
-    def renderEditPost(self, subject="", content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}, pID=''):
+    def renderEditPost(self,
+                       subject="",
+                       content="",
+                       error="",
+                       currUsr={'name': 'anon', 'lastLoginTime': 'Now'},
+                       pID=''):
         self.render("editpost.html", subject=subject,
                     content=content, error=error, user=currUsr, pID=pID)
 
@@ -515,7 +514,7 @@ class EditPost(GenericPost):
         except TypeError:
             return self.redirect('/')
         self.renderEditPost(subject=p.subject,
-                            content=p.content, pID=postID)
+                            content=p.content, pID=postID, currUsr=currUsr)
 
     def post(self, postID):
 
@@ -528,7 +527,10 @@ class EditPost(GenericPost):
         if not p.edit(subject, content):
             error = "We need both a subject and some content!"
             return self.renderEditPost(content=content,
-                                       subject=subject, error=error, currUsr=currUsr, pID=postID)
+                                       subject=subject,
+                                       error=error,
+                                       currUsr=currUsr,
+                                       pID=postID)
 
         return self.redirect("/blog/" + str(postID))
 
@@ -548,7 +550,8 @@ class LikePost(GenericPost):
 
     def get(self, postID):
         try:
-            p, currUsr = self.getPostAndUsr(postID, sameUsrAsPost=False)
+            p, currUsr = self.getPostAndUsr(
+                postID, sameUsrAsPost=False)
         except TypeError:
             return self.redirect('/')
 
@@ -558,7 +561,11 @@ class LikePost(GenericPost):
 
 class AddComment(PermaPost):
 
-    def renderAddComment(self, content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}, p=''):
+    def renderAddComment(self,
+                         content="",
+                         error="",
+                         currUsr={'name': 'anon', 'lastLoginTime': 'Now'},
+                         p=''):
         self.render("post.html",
                     commentContent=content, error=error, user=currUsr, post=p)
 
@@ -586,9 +593,19 @@ class AddComment(PermaPost):
 
 class EditComment(Handler):
 
-    def renderEditComment(self, content="", error="", currUsr={'name': 'anon', 'lastLoginTime': 'Now'}, pID='', cID=''):
+    def renderEditComment(self,
+                          content="",
+                          error="",
+                          currUsr={'name': 'anon', 'lastLoginTime': 'Now'},
+                          pID='',
+                          cID=''):
+
         self.render("editcomment.html",
-                    content=content, error=error, user=currUsr, pID=pID, cID=cID)
+                    content=content,
+                    error=error,
+                    user=currUsr,
+                    pID=pID,
+                    cID=cID)
 
     def get(self, postID, commentID):
         uid = Cookie.get(self, 'uid')
@@ -597,7 +614,8 @@ class EditComment(Handler):
         currUsr = User.getById(uid)
         c = Post.getComment(postID, commentID)
 
-        self.renderEditComment(content=c['content'], currUsr=currUsr, pID=postID, cID=commentID)
+        self.renderEditComment(
+            content=c['content'], currUsr=currUsr, pID=postID, cID=commentID)
 
     def post(self, postID, commentID):
         uid = Cookie.get(self, 'uid')
@@ -610,7 +628,11 @@ class EditComment(Handler):
 
         if not p.editComment(currUsr, content, commentID):
             error = "We need some content!"
-            return self.renderEditComment(content=content, currUsr=currUsr, pID=postID, cID=commentID, error=error)
+            return self.renderEditComment(content=content,
+                                          currUsr=currUsr,
+                                          pID=postID,
+                                          cID=commentID,
+                                          error=error)
 
         return self.redirect("/blog/" + str(postID))
 
@@ -628,7 +650,6 @@ class DeleteComment(Handler):
         p.deleteComment(currUsr, commentID)
 
         return self.redirect("/blog/" + str(postID))
-
 
 app = webapp2.WSGIApplication([
     ('/signup', Signup),
