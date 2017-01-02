@@ -4,3 +4,4 @@ How to run this project
 3. To deploy app, use *gcloud deploy app in project directory
 
 *Note: if you do not have the gcloud app SDK, please download and install it here: https://cloud.google.com/sdk/ 
+Example site: https://effective-task-145220.appspot.com/
